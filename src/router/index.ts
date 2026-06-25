@@ -6,6 +6,10 @@ const router = createRouter({
   routes: [
     {
       path: '/',
+      redirect: '/upload-file',
+    },
+    {
+      path: '/upload-file',
       name: 'upload-file',
       component: UploadFileView,
     },
