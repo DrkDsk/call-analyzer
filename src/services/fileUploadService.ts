@@ -38,3 +38,9 @@ export async function analyzePhoneEventsFile(
 
     return response.data
 }
+
+export async function loadAnalyzeEvents(importId: number): Promise<AnalyzePhoneEventsResponse> {
+    const response = await apiClient.get<AnalyzePhoneEventsResponse>(`/process/${importId}/show`)
+
+    return response.data
+}

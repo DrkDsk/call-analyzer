@@ -6,6 +6,8 @@ import {
   type ImportResult,
   type PhoneEventsSummary,
 } from '../services/fileUploadService'
+import {useRouter} from "vue-router";
+import {formatDuration, formatNumber} from "../helpers/numberHelper";
 
 const selectedFile = ref<File | null>(null)
 const isPreviewing = ref(false)
@@ -14,6 +16,8 @@ const summary = ref<PhoneEventsSummary | null>(null)
 const persistedImport = ref<ImportResult | null>(null)
 const errorMessage = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
+
+const router = useRouter();
 
 const summaryCards = computed(() => {
   if (!summary.value) {
@@ -44,17 +48,6 @@ const saveButtonText = computed(() => {
 
   return 'Guardar analisis'
 })
-
-function formatNumber(value: number) {
-  return new Intl.NumberFormat('es-MX').format(value)
-}
-
-function formatDuration(value: number) {
-  return `${new Intl.NumberFormat('es-MX', {
-    maximumFractionDigits: 2,
-    minimumFractionDigits: 0,
-  }).format(value)} m`
-}
 
 function clearAnalysisState() {
   summary.value = null
@@ -105,6 +98,15 @@ async function handleSaveAnalysis() {
   } finally {
     isSaving.value = false
   }
+}
+
+async function goToSummary(id: number) {
+  router.push({
+    name: 'analyze-summary',
+    params: {
+      id,
+    },
+  });
 }
 </script>
 
@@ -167,6 +169,15 @@ async function handleSaveAnalysis() {
                 >
                   {{ saveButtonText }}
                 </button>
+
+                <button
+                    v-if="persistedImport"
+                    class="rounded-md bg-neon-cyan px-5 py-3 text-sm font-bold text-dark-900 transition hover:bg-neon-blue focus:outline-none focus:ring-2 focus:ring-neon-cyan focus:ring-offset-2 focus:ring-offset-dark-900 disabled:cursor-not-allowed disabled:bg-dark-700 disabled:text-light-100/40"
+                    type="button"
+                    @click="goToSummary(persistedImport.id)"
+                >
+                  Ir a resumen
+                </button>
               </div>
             </div>
 
@@ -198,7 +209,7 @@ async function handleSaveAnalysis() {
                   Preview
                 </p>
                 <h2 class="mt-1 text-2xl font-bold text-light-50">
-                  Resumen del analisis
+                  Resumen del análisis
                 </h2>
               </div>
 
