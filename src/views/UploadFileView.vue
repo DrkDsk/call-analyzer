@@ -3,6 +3,7 @@ import {computed, ref} from 'vue'
 import FileDropzone from '../components/FileDropzone.vue'
 import {
   analyzePhoneEventsFile,
+  extractImportId,
   type ImportResult,
   type PhoneEventsSummary,
 } from '../services/fileUploadService'
@@ -90,9 +91,20 @@ async function handleSaveAnalysis() {
 
   try {
     const response = await analyzePhoneEventsFile(selectedFile.value, true)
+    const importId = extractImportId(response)
+
+    if (!importId) {
+      throw new Error('Missing import id')
+    }
+
     summary.value = response.data.summary
-    persistedImport.value = response.data.import
+    persistedImport.value = response.data.import ?? {
+      id: importId,
+      status: 'saved',
+      progress: 100,
+    }
     successMessage.value = 'Analisis guardado correctamente.'
+    await goToSummary(importId)
   } catch {
     errorMessage.value = 'No se pudo guardar el analisis. El preview se conserva para que puedas intentar de nuevo.'
   } finally {
