@@ -3,6 +3,8 @@ import apiClient from './apiClient'
 export type PhoneEventsSummary = {
     total_events: number
     total_calls: number
+    incoming_calls_count: number
+    outgoing_calls_count: number
     total_messages: number
     total_data: number
     total_duration: number
@@ -27,6 +29,7 @@ export type PhoneEvent = {
     number: string
     first_seen_at: string | null
     last_seen_at: string | null
+    call_direction?: 'incoming' | 'outgoing' | null
     calls_count: number
     messages_count: number
     data_count: number

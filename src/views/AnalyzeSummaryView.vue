@@ -47,6 +47,16 @@ const eventTypeCards = computed(() => [
     value: analyzeEvent.value?.data.summary.total_data ?? 0,
     accentClass: 'text-neon-cyan',
   },
+  {
+    label: 'Llamadas entrantes',
+    value: analyzeEvent.value?.data.summary.incoming_calls_count ?? 0,
+    accentClass: 'text-neon-blue',
+  },
+  {
+    label: 'Llamadas salientes',
+    value: analyzeEvent.value?.data.summary.outgoing_calls_count ?? 0,
+    accentClass: 'text-neon-purple',
+  },
 ])
 
 const summaryCards = computed(() => {
@@ -90,6 +100,18 @@ function formatDate(value: string | null) {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(date)
+}
+
+function formatCallDirection(direction?: string | null) {
+  if (direction === 'incoming') {
+    return 'Entrante'
+  }
+
+  if (direction === 'outgoing') {
+    return 'Saliente'
+  }
+
+  return '-'
 }
 
 const loadAnalyzeEventsData = async () => {
@@ -214,7 +236,7 @@ onMounted(async () => {
               v-if="analyzeEvent"
               class="rounded-lg border border-dark-700 bg-dark-900/80 p-5 shadow-2xl shadow-dark-900/40"
           >
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
               <div
                   v-for="card in eventTypeCards"
                   :key="card.label"
@@ -272,6 +294,7 @@ onMounted(async () => {
                 <tr>
                   <th class="px-4 py-3 font-semibold">Contacto</th>
                   <th class="px-4 py-3 font-semibold">Numero</th>
+                  <th class="px-4 py-3 font-semibold">Dirección llamada</th>
                   <th class="px-4 py-3 font-semibold">Primera vez</th>
                   <th class="px-4 py-3 font-semibold">Ultima vez</th>
                   <th class="px-4 py-3 text-right font-semibold">Llamadas</th>
@@ -292,6 +315,9 @@ onMounted(async () => {
                   </td>
                   <td class="px-4 py-3 text-neon-cyan">
                     {{ event.number || 'Sin numero' }}
+                  </td>
+                  <td class="whitespace-nowrap px-4 py-3 text-light-100/70">
+                    {{ formatCallDirection(event.call_direction) }}
                   </td>
                   <td class="whitespace-nowrap px-4 py-3 text-light-100/70">
                     {{ formatDate(event.first_seen_at) }}
