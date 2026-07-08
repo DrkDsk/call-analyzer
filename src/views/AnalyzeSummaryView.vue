@@ -4,8 +4,11 @@ import type {ApexOptions} from "apexcharts";
 import VueApexCharts from "vue3-apexcharts";
 import {
   loadAnalyzeEvents,
+  loadAnalyzeEventsAnalytics,
   loadPhoneEvents,
   type AnalyzePhoneEventsResponse,
+  type CallDirectionFilter,
+  type PhoneEventsAnalyticsResponse,
   type PhoneEvent,
   type PhoneEventsPaginatedResponse,
 } from "../services/fileUploadService";
@@ -15,36 +18,29 @@ import {formatDuration, formatNumber} from "../helpers/numberHelper";
 const analyzeEvent = ref<AnalyzePhoneEventsResponse | null>(null)
 const phoneEvents = ref<PhoneEvent[]>([])
 const phoneEventsPagination = ref<PhoneEventsPaginatedResponse | null>(null)
+const callAnalytics = ref<PhoneEventsAnalyticsResponse | null>(null)
 const isLoadingAnalyzeSummary = ref(false)
 const isLoadingPhoneEvents = ref(false)
+const isLoadingCallAnalytics = ref(false)
 const errorMessage = ref<string | null>(null)
 const phoneEventsError = ref<string | null>(null)
+const callAnalyticsError = ref<string | null>(null)
 const selectedCallDateKey = ref<string | null>(null)
-const selectedCallDirection = ref<'all' | 'incoming' | 'outgoing' | 'unknown'>('all')
+const selectedCallDirection = ref<CallDirectionFilter>('all')
 
 const route = useRoute();
 const importId = Number(route.params.id);
 
-type CallDirectionFilter = 'all' | 'incoming' | 'outgoing' | 'unknown'
 type ChartCallDirection = Exclude<CallDirectionFilter, 'all'>
 
-type CallsByDateGroup = {
-  date: string
-  dateKey: string
-  incoming: number
-  outgoing: number
-  unknown: number
-  events: PhoneEvent[]
-}
-
-const callDirectionFilters: {label: string; value: CallDirectionFilter}[] = [
+const callDirectionFilters: { label: string; value: CallDirectionFilter }[] = [
   {label: 'Todas', value: 'all'},
   {label: 'Entrantes', value: 'incoming'},
   {label: 'Salientes', value: 'outgoing'},
   {label: 'Sin clasificar', value: 'unknown'},
 ]
 
-const callDirectionSeries: {name: string; value: ChartCallDirection; color: string}[] = [
+const callDirectionSeries: { name: string; value: ChartCallDirection; color: string }[] = [
   {name: 'Entrantes', value: 'incoming', color: '#38bdf8'},
   {name: 'Salientes', value: 'outgoing', color: '#c084fc'},
   {name: 'Sin clasificar', value: 'unknown', color: '#22d3ee'},
@@ -114,44 +110,9 @@ const phoneEventsPageLinks = computed(() => {
   return phoneEventsMeta.value?.links.filter((link) => link.page !== null && /^\d+$/.test(link.label)) ?? []
 })
 
-const callEventsSource = computed(() => {
-  const summaryEvents = analyzeEvent.value?.data.phone_events ?? []
+const callsByDate = computed(() => callAnalytics.value?.data ?? [])
 
-  return summaryEvents.length ? summaryEvents : phoneEvents.value
-})
-
-const callEvents = computed(() => {
-  return callEventsSource.value.filter((event) => isCallEvent(event))
-})
-
-const callsByDate = computed<CallsByDateGroup[]>(() => {
-  const groups = new Map<string, CallsByDateGroup>()
-
-  callEvents.value.forEach((event) => {
-    const dateValue = getCallEventDate(event)
-    const dateKey = getDateKey(dateValue)
-    const group = groups.get(dateKey) ?? {
-      date: formatDateLabel(dateValue),
-      dateKey,
-      incoming: 0,
-      outgoing: 0,
-      unknown: 0,
-      events: [],
-    }
-
-    const directionGroup = getCallDirectionGroup(event.call_direction)
-    group[directionGroup] += 1
-    group.events.push(event)
-    groups.set(dateKey, group)
-  })
-
-  return Array.from(groups.values()).sort((first, second) => {
-    if (first.dateKey === 'sin-fecha') return 1
-    if (second.dateKey === 'sin-fecha') return -1
-
-    return first.dateKey.localeCompare(second.dateKey)
-  })
-})
+const callAnalyticsTotal = computed(() => callAnalytics.value?.meta.total ?? 0)
 
 const callChartVisibleDirections = computed(() => {
   if (selectedCallDirection.value === 'all') {
@@ -168,7 +129,7 @@ const callChartSeries = computed(() => {
   }))
 })
 
-const callChartCategories = computed(() => callsByDate.value.map((item) => item.date))
+const callChartCategories = computed(() => callsByDate.value.map((item) => item.label))
 
 const callChartOptions = computed<ApexOptions>(() => ({
   chart: {
@@ -188,8 +149,9 @@ const callChartOptions = computed<ApexOptions>(() => ({
           return
         }
 
-        selectedCallDateKey.value = dateGroup.dateKey
+        selectedCallDateKey.value = dateGroup.date
         selectedCallDirection.value = direction
+        void loadCallAnalyticsData()
       },
     },
   },
@@ -256,11 +218,15 @@ const selectedCallDateLabel = computed(() => {
     return null
   }
 
-  return callsByDate.value.find((item) => item.dateKey === selectedCallDateKey.value)?.date ?? 'Sin fecha'
+  return callsByDate.value.find((item) => item.date === selectedCallDateKey.value)?.label ?? 'Sin fecha'
 })
 
 const filteredCallEvents = computed(() => {
-  return callEvents.value.filter((event) => {
+  return phoneEvents.value.filter((event) => {
+    if (!isCallEvent(event)) {
+      return false
+    }
+
     const eventDateKey = getDateKey(getCallEventDate(event))
 
     if (selectedCallDateKey.value && eventDateKey !== selectedCallDateKey.value) {
@@ -269,11 +235,7 @@ const filteredCallEvents = computed(() => {
 
     const directionGroup = getCallDirectionGroup(event.call_direction)
 
-    if (selectedCallDirection.value !== 'all' && directionGroup !== selectedCallDirection.value) {
-      return false
-    }
-
-    return true
+    return !(selectedCallDirection.value !== 'all' && directionGroup !== selectedCallDirection.value);
   })
 })
 
@@ -385,6 +347,7 @@ function getChartSeriesDirection(seriesIndex: number): ChartCallDirection | null
 
 function selectCallDirection(direction: CallDirectionFilter) {
   selectedCallDirection.value = direction
+  void loadCallAnalyticsData()
 }
 
 function clearCallDateSelection() {
@@ -432,6 +395,25 @@ const loadPhoneEventsData = async (page = 1) => {
   }
 }
 
+const loadCallAnalyticsData = async () => {
+  if (!importId) {
+    callAnalyticsError.value = 'No se encontro el identificador del analisis.'
+    return
+  }
+
+  isLoadingCallAnalytics.value = true
+  callAnalyticsError.value = null
+
+  try {
+    callAnalytics.value = await loadAnalyzeEventsAnalytics(importId, selectedCallDirection.value)
+  } catch {
+    callAnalytics.value = null
+    callAnalyticsError.value = 'No se pudo cargar la grafica de llamadas.'
+  } finally {
+    isLoadingCallAnalytics.value = false
+  }
+}
+
 function goToPhoneEventsPage(page: number) {
   if (!phoneEventsPagination.value) {
     return
@@ -449,6 +431,7 @@ function goToPhoneEventsPage(page: number) {
 onMounted(async () => {
   await Promise.all([
     loadAnalyzeEventsData(),
+    loadCallAnalyticsData(),
     loadPhoneEventsData(),
   ])
 })
@@ -539,7 +522,7 @@ onMounted(async () => {
                     Entrantes, salientes y sin clasificar
                   </h3>
                   <p class="mt-2 text-sm text-light-100/60">
-                    {{ formatNumber(callEvents.length) }} llamadas detectadas
+                    {{ formatNumber(callAnalyticsTotal) }} llamadas detectadas
                   </p>
                 </div>
 
@@ -560,7 +543,21 @@ onMounted(async () => {
               </div>
 
               <div
-                  v-if="callsByDate.length"
+                  v-if="isLoadingCallAnalytics"
+                  class="mt-5 rounded-lg border border-dark-700 bg-dark-800/75 p-5 text-sm font-semibold text-neon-blue"
+              >
+                Cargando grafica de llamadas...
+              </div>
+
+              <p
+                  v-if="callAnalyticsError"
+                  class="mt-5 rounded-md border border-neon-pink/50 bg-dark-800 px-4 py-3 text-sm text-neon-pink"
+              >
+                {{ callAnalyticsError }}
+              </p>
+
+              <div
+                  v-if="!isLoadingCallAnalytics && !callAnalyticsError && callsByDate.length"
                   class="mt-5 min-h-[360px]"
               >
                 <VueApexCharts
@@ -572,18 +569,19 @@ onMounted(async () => {
               </div>
 
               <p
-                  v-else
+                  v-else-if="!isLoadingCallAnalytics && !callAnalyticsError"
                   class="mt-5 rounded-md border border-dark-700 bg-dark-800/75 px-4 py-4 text-sm text-light-100/70"
               >
                 No hay llamadas suficientes para graficar.
               </p>
 
-              <div class="mt-5 flex flex-col gap-2 border-t border-dark-700 pt-4 sm:flex-row sm:items-center sm:justify-between">
+              <div
+                  class="mt-5 flex flex-col gap-2 border-t border-dark-700 pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <div class="text-sm text-light-100/70">
                   <span class="font-semibold text-light-50">
                     {{ formatNumber(filteredCallEvents.length) }}
                   </span>
-                  eventos filtrados
+                  eventos filtrados en la pagina actual
                   <span v-if="selectedCallDateLabel">
                     en {{ selectedCallDateLabel }}
                   </span>

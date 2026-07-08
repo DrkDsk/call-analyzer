@@ -77,6 +77,35 @@ export type PaginatedResponse<T> = {
 
 export type PhoneEventsPaginatedResponse = PaginatedResponse<PhoneEvent>
 
+export type CallDirectionFilter = 'all' | 'incoming' | 'outgoing' | 'unknown'
+
+export type PhoneEventsAnalyticsDirection = 'incoming' | 'outgoing' | 'unknown' | null
+
+export type PhoneEventsAnalyticsRow = {
+    date: string
+    label: string
+    incoming: number
+    outgoing: number
+    unknown: number
+    total: number
+}
+
+export type PhoneEventsAnalyticsMeta = {
+    type: 'call'
+    group_by: 'date'
+    metric: 'count'
+    direction: PhoneEventsAnalyticsDirection
+    incoming: number
+    outgoing: number
+    unknown: number
+    total: number
+}
+
+export type PhoneEventsAnalyticsResponse = {
+    data: PhoneEventsAnalyticsRow[]
+    meta: PhoneEventsAnalyticsMeta
+}
+
 export type AnalyzePhoneEventsResponse = {
     data: {
         import: ImportResult | null
@@ -129,6 +158,22 @@ export async function analyzePhoneEventsFile(
 
 export async function loadAnalyzeEvents(importId: number): Promise<AnalyzePhoneEventsResponse> {
     const response = await apiClient.get<AnalyzePhoneEventsResponse>(`/process/${importId}/show`)
+
+    return response.data
+}
+
+export async function loadAnalyzeEventsAnalytics(
+    importId: number | string,
+    direction: CallDirectionFilter = 'all',
+): Promise<PhoneEventsAnalyticsResponse> {
+    const response = await apiClient.get<PhoneEventsAnalyticsResponse>(`/process/${importId}/events/analytics`, {
+        params: {
+            type: 'call',
+            group_by: 'date',
+            metric: 'count',
+            ...(direction !== 'all' ? {direction} : {}),
+        },
+    })
 
     return response.data
 }
