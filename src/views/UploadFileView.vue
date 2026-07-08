@@ -27,6 +27,7 @@ const summaryCards = computed(() => {
 
   return [
     {label: 'Total eventos', value: formatNumber(summary.value.total_events)},
+    {label: 'Total mensajes', value: formatNumber(summary.value.total_messages)},
     {label: 'Total llamadas', value: formatNumber(summary.value.total_calls)},
     {label: 'Total datos', value: formatNumber(summary.value.total_data)},
     {label: 'Duración total', value: formatDuration(summary.value.total_duration)},
@@ -221,7 +222,7 @@ async function goToSummary(id: number) {
                   Preview
                 </p>
                 <h2 class="mt-1 text-2xl font-bold text-light-50">
-                  Resumen del análisis
+                  Resumen del análisis (PREVIEW)
                 </h2>
               </div>
 

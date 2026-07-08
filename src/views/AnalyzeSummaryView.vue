@@ -31,6 +31,24 @@ const originalFilename = computed(() => {
   return data.original_filename;
 })
 
+const eventTypeCards = computed(() => [
+  {
+    label: 'Llamadas Totales',
+    value: analyzeEvent.value?.data.summary.total_calls ?? 0,
+    accentClass: 'text-neon-blue',
+  },
+  {
+    label: 'Mensajes Totales',
+    value: analyzeEvent.value?.data.summary.total_messages ?? 0,
+    accentClass: 'text-neon-purple',
+  },
+  {
+    label: 'Datos Totales',
+    value: analyzeEvent.value?.data.summary.total_data ?? 0,
+    accentClass: 'text-neon-cyan',
+  },
+])
+
 const summaryCards = computed(() => {
   if (!analyzeEvent.value) {
     return []
@@ -196,7 +214,23 @@ onMounted(async () => {
               v-if="analyzeEvent"
               class="rounded-lg border border-dark-700 bg-dark-900/80 p-5 shadow-2xl shadow-dark-900/40"
           >
-            <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div
+                  v-for="card in eventTypeCards"
+                  :key="card.label"
+                  class="rounded-md border border-dark-700 bg-dark-950/60 p-5 text-center shadow-lg shadow-dark-950/30 backdrop-blur"
+              >
+                <p :class="['break-words text-3xl font-bold tracking-wide', card.accentClass]">
+                  {{ card.value }}
+                </p>
+
+                <p class="mt-2 text-xs font-semibold uppercase tracking-wide text-light-100/55">
+                  {{ card.label }}
+                </p>
+              </div>
+            </div>
+
+            <div class="mt-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p class="text-xs font-semibold uppercase tracking-wide text-neon-purple">
                   Eventos
