@@ -27,9 +27,16 @@ export type PhoneEvent = {
     import_id: number
     contact: string
     number: string
+    phone?: string | null
+    number_a?: string | null
+    number_b?: string | null
+    type?: string | null
+    duration?: number | string | null
+    date?: string | null
+    time?: string | null
     first_seen_at: string | null
     last_seen_at: string | null
-    call_direction?: 'incoming' | 'outgoing' | null
+    call_direction?: 'incoming' | 'outgoing' | string | null
     calls_count: number
     messages_count: number
     data_count: number
@@ -74,6 +81,7 @@ export type AnalyzePhoneEventsResponse = {
     data: {
         import: ImportResult | null
         summary: PhoneEventsSummary
+        phone_events?: PhoneEvent[]
     }
 }
 
