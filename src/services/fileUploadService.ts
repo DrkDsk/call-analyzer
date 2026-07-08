@@ -27,9 +27,16 @@ export type PhoneEvent = {
     import_id: number
     contact: string
     number: string
+    phone?: string | null
+    number_a?: string | null
+    number_b?: string | null
+    type?: string | null
+    duration?: number | string | null
+    date?: string | null
+    time?: string | null
     first_seen_at: string | null
     last_seen_at: string | null
-    call_direction?: 'incoming' | 'outgoing' | null
+    call_direction?: 'incoming' | 'outgoing' | string | null
     calls_count: number
     messages_count: number
     data_count: number
@@ -70,10 +77,40 @@ export type PaginatedResponse<T> = {
 
 export type PhoneEventsPaginatedResponse = PaginatedResponse<PhoneEvent>
 
+export type CallDirectionFilter = 'all' | 'incoming' | 'outgoing' | 'unknown'
+
+export type PhoneEventsAnalyticsDirection = 'incoming' | 'outgoing' | 'unknown' | null
+
+export type PhoneEventsAnalyticsRow = {
+    date: string
+    label: string
+    incoming: number
+    outgoing: number
+    unknown: number
+    total: number
+}
+
+export type PhoneEventsAnalyticsMeta = {
+    type: 'call'
+    group_by: 'date'
+    metric: 'count'
+    direction: PhoneEventsAnalyticsDirection
+    incoming: number
+    outgoing: number
+    unknown: number
+    total: number
+}
+
+export type PhoneEventsAnalyticsResponse = {
+    data: PhoneEventsAnalyticsRow[]
+    meta: PhoneEventsAnalyticsMeta
+}
+
 export type AnalyzePhoneEventsResponse = {
     data: {
         import: ImportResult | null
         summary: PhoneEventsSummary
+        phone_events?: PhoneEvent[]
     }
 }
 
@@ -121,6 +158,22 @@ export async function analyzePhoneEventsFile(
 
 export async function loadAnalyzeEvents(importId: number): Promise<AnalyzePhoneEventsResponse> {
     const response = await apiClient.get<AnalyzePhoneEventsResponse>(`/process/${importId}/show`)
+
+    return response.data
+}
+
+export async function loadAnalyzeEventsAnalytics(
+    importId: number | string,
+    direction: CallDirectionFilter = 'all',
+): Promise<PhoneEventsAnalyticsResponse> {
+    const response = await apiClient.get<PhoneEventsAnalyticsResponse>(`/process/${importId}/events/analytics`, {
+        params: {
+            type: 'call',
+            group_by: 'date',
+            metric: 'count',
+            ...(direction !== 'all' ? {direction} : {}),
+        },
+    })
 
     return response.data
 }
