@@ -575,67 +575,67 @@ onMounted(async () => {
                 No hay llamadas suficientes para graficar.
               </p>
 
-              <div
-                  class="mt-5 flex flex-col gap-2 border-t border-dark-700 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                <div class="text-sm text-light-100/70">
-                  <span class="font-semibold text-light-50">
-                    {{ formatNumber(filteredCallEvents.length) }}
-                  </span>
-                  eventos filtrados en la pagina actual
-                  <span v-if="selectedCallDateLabel">
-                    en {{ selectedCallDateLabel }}
-                  </span>
-                </div>
+              <!--              <div
+                                class="mt-5 flex flex-col gap-2 border-t border-dark-700 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                              <div class="text-sm text-light-100/70">
+                                <span class="font-semibold text-light-50">
+                                  {{ formatNumber(filteredCallEvents.length) }}
+                                </span>
+                                eventos filtrados en la pagina actual
+                                <span v-if="selectedCallDateLabel">
+                                  en {{ selectedCallDateLabel }}
+                                </span>
+                              </div>
 
-                <button
-                    v-if="selectedCallDateKey"
-                    class="self-start rounded-md border border-neon-purple/60 px-3 py-2 text-sm font-semibold text-neon-purple transition hover:border-neon-cyan hover:text-neon-cyan focus:outline-none focus:ring-2 focus:ring-neon-cyan focus:ring-offset-2 focus:ring-offset-dark-900 sm:self-auto"
-                    type="button"
-                    @click="clearCallDateSelection"
-                >
-                  Ver todas las fechas
-                </button>
-              </div>
+                              <button
+                                  v-if="selectedCallDateKey"
+                                  class="self-start rounded-md border border-neon-purple/60 px-3 py-2 text-sm font-semibold text-neon-purple transition hover:border-neon-cyan hover:text-neon-cyan focus:outline-none focus:ring-2 focus:ring-neon-cyan focus:ring-offset-2 focus:ring-offset-dark-900 sm:self-auto"
+                                  type="button"
+                                  @click="clearCallDateSelection"
+                              >
+                                Ver todas las fechas
+                              </button>
+                            </div>
 
-              <div
-                  v-if="filteredCallEvents.length"
-                  class="mt-4 overflow-x-auto rounded-md border border-dark-700"
-              >
-                <table class="min-w-full divide-y divide-dark-700 text-left text-sm">
-                  <thead class="bg-dark-800/90 text-xs uppercase tracking-wide text-light-100/50">
-                  <tr>
-                    <th class="px-4 py-3 font-semibold">Fecha</th>
-                    <th class="px-4 py-3 font-semibold">Numero</th>
-                    <th class="px-4 py-3 font-semibold">Tipo</th>
-                    <th class="px-4 py-3 font-semibold">Dirección</th>
-                    <th class="px-4 py-3 text-right font-semibold">Duración</th>
-                  </tr>
-                  </thead>
-                  <tbody class="divide-y divide-dark-700 bg-dark-900/60">
-                  <tr
-                      v-for="event in filteredCallEvents"
-                      :key="`call-${event.id}`"
-                      class="transition hover:bg-dark-800/70"
-                  >
-                    <td class="whitespace-nowrap px-4 py-3 text-light-100/70">
-                      {{ formatDate(getCallEventDate(event)) }}
-                    </td>
-                    <td class="px-4 py-3 text-neon-cyan">
-                      {{ getCallEventNumber(event) }}
-                    </td>
-                    <td class="whitespace-nowrap px-4 py-3 text-light-100/70">
-                      {{ event.type || 'call' }}
-                    </td>
-                    <td class="whitespace-nowrap px-4 py-3 text-light-100/70">
-                      {{ formatCallDirection(event.call_direction) }}
-                    </td>
-                    <td class="px-4 py-3 text-right font-semibold text-light-50">
-                      {{ formatCallDuration(event.duration) }}
-                    </td>
-                  </tr>
-                  </tbody>
-                </table>
-              </div>
+                            <div
+                                v-if="filteredCallEvents.length"
+                                class="mt-4 overflow-x-auto rounded-md border border-dark-700"
+                            >
+                              <table class="min-w-full divide-y divide-dark-700 text-left text-sm">
+                                <thead class="bg-dark-800/90 text-xs uppercase tracking-wide text-light-100/50">
+                                <tr>
+                                  <th class="px-4 py-3 font-semibold">Fecha</th>
+                                  <th class="px-4 py-3 font-semibold">Numero</th>
+                                  <th class="px-4 py-3 font-semibold">Tipo</th>
+                                  <th class="px-4 py-3 font-semibold">Dirección</th>
+                                  <th class="px-4 py-3 text-right font-semibold">Duración</th>
+                                </tr>
+                                </thead>
+                                <tbody class="divide-y divide-dark-700 bg-dark-900/60">
+                                <tr
+                                    v-for="event in filteredCallEvents"
+                                    :key="`call-${event.id}`"
+                                    class="transition hover:bg-dark-800/70"
+                                >
+                                  <td class="whitespace-nowrap px-4 py-3 text-light-100/70">
+                                    {{ formatDate(getCallEventDate(event)) }}
+                                  </td>
+                                  <td class="px-4 py-3 text-neon-cyan">
+                                    {{ getCallEventNumber(event) }}
+                                  </td>
+                                  <td class="whitespace-nowrap px-4 py-3 text-light-100/70">
+                                    {{ event.type || 'call' }}
+                                  </td>
+                                  <td class="whitespace-nowrap px-4 py-3 text-light-100/70">
+                                    {{ formatCallDirection(event.call_direction) }}
+                                  </td>
+                                  <td class="px-4 py-3 text-right font-semibold text-light-50">
+                                    {{ formatCallDuration(event.duration) }}
+                                  </td>
+                                </tr>
+                                </tbody>
+                              </table>
+                            </div>-->
 
               <p
                   v-else-if="callsByDate.length"
