@@ -16,6 +16,8 @@ import {
 import {useRoute} from "vue-router";
 import {formatDuration, formatNumber} from "../helpers/numberHelper";
 
+type ChartCallDirection = Exclude<CallDirectionFilter, 'all'>
+
 const analyzeEvent = ref<AnalyzePhoneEventsResponse | null>(null)
 const phoneEvents = ref<PhoneEvent[]>([])
 const phoneEventsPagination = ref<PhoneEventsPaginatedResponse | null>(null)
@@ -29,11 +31,10 @@ const callAnalyticsError = ref<string | null>(null)
 const selectedCallDateKey = ref<string | null>(null)
 const selectedCallDirection = ref<CallDirectionFilter>('all')
 const lastSeenOrder = ref<LastSeenOrder>('asc')
+const hiddenCallDirections = ref<ChartCallDirection[]>([])
 
 const route = useRoute();
 const importId = Number(route.params.id);
-
-type ChartCallDirection = Exclude<CallDirectionFilter, 'all'>
 
 const callDirectionFilters: { label: string; value: CallDirectionFilter }[] = [
   {label: 'Todas', value: 'all'},
@@ -43,9 +44,9 @@ const callDirectionFilters: { label: string; value: CallDirectionFilter }[] = [
 ]
 
 const callDirectionSeries: { name: string; value: ChartCallDirection; color: string }[] = [
-  {name: 'Entrantes', value: 'incoming', color: '#38bdf8'},
-  {name: 'Salientes', value: 'outgoing', color: '#c084fc'},
-  {name: 'Sin clasificar', value: 'unknown', color: '#22d3ee'},
+  {name: 'Salientes', value: 'outgoing', color: '#adeec7'},
+  {name: 'Entrantes', value: 'incoming', color: '#82c3ea'},
+  {name: 'Sin clasificar', value: 'unknown', color: '#ea7aa3'},
 ]
 
 const originalFilename = computed(() => {
@@ -114,8 +115,6 @@ const phoneEventsPageLinks = computed(() => {
 
 const callsByDate = computed(() => callAnalytics.value?.data ?? [])
 
-const callAnalyticsTotal = computed(() => callAnalytics.value?.meta.total ?? 0)
-
 const callChartVisibleDirections = computed(() => {
   if (selectedCallDirection.value === 'all') {
     return callDirectionSeries
@@ -131,6 +130,16 @@ const callChartSeries = computed(() => {
   }))
 })
 
+const callAnalyticsTotal = computed(() => {
+  return callChartVisibleDirections.value.reduce((total, direction) => {
+    if (hiddenCallDirections.value.includes(direction.value)) {
+      return total
+    }
+
+    return total + callsByDate.value.reduce((subtotal, item) => subtotal + item[direction.value], 0)
+  }, 0)
+})
+
 const callChartCategories = computed(() => callsByDate.value.map((item) => item.label))
 
 const callChartOptions = computed<ApexOptions>(() => ({
@@ -143,6 +152,9 @@ const callChartOptions = computed<ApexOptions>(() => ({
     foreColor: '#d8e8f8',
     background: 'transparent',
     events: {
+      legendClick: (_chartContext, seriesIndex) => {
+        toggleCallSeriesVisibility(seriesIndex)
+      },
       dataPointSelection: (_event, _chartContext, config) => {
         const dateGroup = callsByDate.value[config.dataPointIndex]
         const direction = getChartSeriesDirection(config.seriesIndex)
@@ -262,6 +274,22 @@ function getChartSeriesDirection(seriesIndex: number): ChartCallDirection | null
   return callChartVisibleDirections.value[seriesIndex]?.value ?? null
 }
 
+function toggleCallSeriesVisibility(seriesIndex?: number) {
+  if (seriesIndex === undefined) {
+    return
+  }
+
+  const direction = getChartSeriesDirection(seriesIndex)
+
+  if (!direction) {
+    return
+  }
+
+  hiddenCallDirections.value = hiddenCallDirections.value.includes(direction)
+      ? hiddenCallDirections.value.filter((item) => item !== direction)
+      : [...hiddenCallDirections.value, direction]
+}
+
 function selectCallDirection(direction: CallDirectionFilter) {
   selectedCallDirection.value = direction
   void loadCallAnalyticsData()
@@ -323,6 +351,7 @@ const loadCallAnalyticsData = async () => {
     return
   }
 
+  hiddenCallDirections.value = []
   isLoadingCallAnalytics.value = true
   callAnalyticsError.value = null
 
