@@ -77,6 +77,8 @@ export type PaginatedResponse<T> = {
 
 export type PhoneEventsPaginatedResponse = PaginatedResponse<PhoneEvent>
 
+export type LastSeenOrder = 'asc' | 'desc'
+
 export type CallDirectionFilter = 'all' | 'incoming' | 'outgoing' | 'unknown'
 
 export type PhoneEventsAnalyticsDirection = 'incoming' | 'outgoing' | 'unknown' | null
@@ -181,10 +183,12 @@ export async function loadAnalyzeEventsAnalytics(
 export async function loadPhoneEvents(
     importId: number | string,
     page = 1,
+    lastSeenOrder: LastSeenOrder = 'asc',
 ): Promise<PhoneEventsPaginatedResponse> {
     const response = await apiClient.get<PhoneEventsPaginatedResponse>(`/process/${importId}/events`, {
         params: {
             page,
+            last_seen_order: lastSeenOrder,
         },
     })
 
