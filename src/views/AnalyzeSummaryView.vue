@@ -534,7 +534,7 @@ onMounted(async () => {
               </p>
             </div>
 
-            <div class="mt-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div class="mt-5">
               <div>
                 <p class="text-xs font-semibold uppercase tracking-wide text-neon-purple">
                   Eventos
@@ -543,10 +543,6 @@ onMounted(async () => {
                   Análisis detallado
                 </h2>
               </div>
-
-              <p class="text-sm text-light-100/60">
-                {{ formatNumber(phoneEventsMeta?.total ?? phoneEvents.length) }} registros
-              </p>
             </div>
 
             <div
@@ -636,19 +632,34 @@ onMounted(async () => {
             </div>
 
             <div
-                v-if="phoneEventsPagination && phoneEventsPagination.meta.last_page > 1"
-                class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                v-if="phoneEventsPagination"
+                class="mt-5 flex flex-col gap-3 rounded-md border border-dark-700 bg-dark-950/40 px-3 py-3 lg:flex-row lg:items-center lg:justify-between"
             >
-              <button
-                  class="rounded-md border border-neon-blue/60 px-4 py-2 text-sm font-semibold text-neon-blue transition hover:border-neon-cyan hover:text-neon-cyan focus:outline-none focus:ring-2 focus:ring-neon-cyan focus:ring-offset-2 focus:ring-offset-dark-900 disabled:cursor-not-allowed disabled:border-dark-700 disabled:text-light-100/40"
-                  type="button"
-                  :disabled="isLoadingPhoneEvents || !phoneEventsPagination.links.prev"
-                  @click="goToPhoneEventsPage(phoneEventsPagination.meta.current_page - 1)"
-              >
-                Anterior
-              </button>
+              <p class="text-center text-sm text-light-100/60 lg:text-left">
+                Mostrando
+                <span class="font-semibold text-neon-cyan">
+                  {{ formatNumber(phoneEvents.length) }}
+                </span>
+                de
+                <span class="font-semibold text-light-50">
+                  {{ formatNumber(phoneEventsMeta?.total ?? phoneEvents.length) }}
+                </span>
+                registros
+              </p>
 
-              <div class="flex flex-wrap items-center justify-center gap-2">
+              <div
+                  v-if="phoneEventsPagination.meta.last_page > 1"
+                  class="flex flex-wrap items-center justify-center gap-2 lg:justify-end"
+              >
+                <button
+                    class="rounded-md border border-neon-blue/60 px-4 py-2 text-sm font-semibold text-neon-blue transition hover:border-neon-cyan hover:text-neon-cyan focus:outline-none focus:ring-2 focus:ring-neon-cyan focus:ring-offset-2 focus:ring-offset-dark-900 disabled:cursor-not-allowed disabled:border-dark-700 disabled:text-light-100/40"
+                    type="button"
+                    :disabled="isLoadingPhoneEvents || !phoneEventsPagination.links.prev"
+                    @click="goToPhoneEventsPage(phoneEventsPagination.meta.current_page - 1)"
+                >
+                  Anterior
+                </button>
+
                 <button
                     v-for="link in phoneEventsPageLinks"
                     :key="`${link.label}-${link.page}`"
@@ -662,16 +673,16 @@ onMounted(async () => {
                 >
                   {{ link.label }}
                 </button>
-              </div>
 
-              <button
-                  class="rounded-md border border-neon-blue/60 px-4 py-2 text-sm font-semibold text-neon-blue transition hover:border-neon-cyan hover:text-neon-cyan focus:outline-none focus:ring-2 focus:ring-neon-cyan focus:ring-offset-2 focus:ring-offset-dark-900 disabled:cursor-not-allowed disabled:border-dark-700 disabled:text-light-100/40"
-                  type="button"
-                  :disabled="isLoadingPhoneEvents || !phoneEventsPagination.links.next"
-                  @click="goToPhoneEventsPage(phoneEventsPagination.meta.current_page + 1)"
-              >
-                Siguiente
-              </button>
+                <button
+                    class="rounded-md border border-neon-blue/60 px-4 py-2 text-sm font-semibold text-neon-blue transition hover:border-neon-cyan hover:text-neon-cyan focus:outline-none focus:ring-2 focus:ring-neon-cyan focus:ring-offset-2 focus:ring-offset-dark-900 disabled:cursor-not-allowed disabled:border-dark-700 disabled:text-light-100/40"
+                    type="button"
+                    :disabled="isLoadingPhoneEvents || !phoneEventsPagination.links.next"
+                    @click="goToPhoneEventsPage(phoneEventsPagination.meta.current_page + 1)"
+                >
+                  Siguiente
+                </button>
+              </div>
             </div>
           </section>
         </div>
