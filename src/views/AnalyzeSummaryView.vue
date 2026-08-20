@@ -38,8 +38,8 @@ const importId = Number(route.params.id);
 
 const callDirectionFilters: { label: string; value: CallDirectionFilter }[] = [
   {label: 'Todas', value: 'all'},
-  {label: 'Entrantes', value: 'incoming'},
   {label: 'Salientes', value: 'outgoing'},
+  {label: 'Entrantes', value: 'incoming'},
   {label: 'Sin clasificar', value: 'unknown'},
 ]
 
